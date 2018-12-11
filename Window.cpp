@@ -1,9 +1,10 @@
 #include "window.h"
 #include "Camera.h"
 #include "Sound.h"
-#include "GLFWStarterProject\Sphere.h";
 
-const char* window_title = "GLFW Starter Project";
+#include "GLFWStarterProject\Sphere.h"
+
+const char* window_title = "CSE 167 Final";
 int Window::width;
 int Window::height;
 
@@ -33,7 +34,8 @@ GLint curveShaderProgram;
 #define CURVE_FRAGMENT_SHADER_PATH "../curve_shader.frag"
 
 
-#define BACKGROUND_MUSIC_PATH "../path"
+#define BACKGROUND_MUSIC_PATH "puzzle.wav"
+#define SOUND_EFFECT_PATH "test.wav"
 
 // Default camera parameters
 Camera* cam;
@@ -45,6 +47,10 @@ Skybox * skybox;
 
 Sound* sound;
 
+// motion blur integers
+int testi = 0;
+int testn = 15;
+
 // Curve ID
 int curveID = 0;
 
@@ -53,6 +59,12 @@ float distanceTravled = 0.0f;
 
 // Boolean value for Travel
 bool pause = true;
+
+// Boolean Value for motion blur
+bool isMotionBlur = false;
+
+// Boolean value for loop
+bool loopOn = true;
 
 void Window::initialize_objects()
 {
@@ -64,8 +76,10 @@ void Window::initialize_objects()
 
 	sound = new Sound();
 
-	sound->createSource(BACKGROUND_MUSIC_PATH);
-	sound->playSource();
+	sound->createSource("background", BACKGROUND_MUSIC_PATH, loopOn);
+	sound->createSource("sound", SOUND_EFFECT_PATH, !loopOn);
+	sound->playSource("background");
+
 
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
@@ -184,8 +198,29 @@ void Window::display_callback(GLFWwindow* window)
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
+
+	if (isMotionBlur) {
+
+		if (testi == 0) {
+			glAccum(GL_LOAD, 1.0 / testn);
+		}
+		else {
+			glAccum(GL_ACCUM, 1.0 / testn);
+		}
+
+		testi++;
+
+		if (testi >= testn) {
+			testi = 0;
+			glAccum(GL_RETURN, 1.0);
+			glfwSwapBuffers(window);
+		}
+	}
+	else {
+		glfwSwapBuffers(window);
+	}
 	// Swap buffers
-	glfwSwapBuffers(window);
+	
 }
 
 void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -261,6 +296,14 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 		else if (key == GLFW_KEY_Z)
 		{
 			curve->MovePoint(glm::vec3(0.0f, 0.0f, 1.0f));
+		}
+		else if (key == GLFW_KEY_M)
+		{
+			isMotionBlur = !isMotionBlur;
+		}
+		else if (key == GLFW_KEY_E)
+		{
+			sound->playSource("sound");
 		}
 	}
 }

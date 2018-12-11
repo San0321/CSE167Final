@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 
+
 bool Sound::isBigEndian()
 {
 	int a = 1;
@@ -69,11 +70,9 @@ Sound::Sound()
 	alcMakeContextCurrent(context);
 }
 
-void Sound::createSource(const char* filename) {
+void Sound::createSource(char* name, const char* filename, bool isLoopOn) {
 
-	int channel, sampleRate, bps, size;
-
-	char* data = loadWAV("puzzle.wav", channel, sampleRate, bps, size);
+	char* data = loadWAV(filename, channel, sampleRate, bps, size);
 
 	std::cout << "Successfully loaded WAV file" << std::endl;
 
@@ -101,22 +100,26 @@ void Sound::createSource(const char* filename) {
 			format = AL_FORMAT_STEREO16;
 		}
 	}
-
 	alBufferData(bufferid, format, data, size, sampleRate);
 	
 	alSourcei(sourceid, AL_BUFFER, bufferid);
-	alSourcei(sourceid, AL_LOOPING, AL_TRUE);
+	alSourcei(sourceid, AL_LOOPING, isLoopOn ? AL_TRUE : AL_FALSE);
+
+	sources_[name] = std::make_pair(sourceid, bufferid);
 }
 
 
-void Sound::playSource() {
-	alSourcePlay(this->sourceid);
+void Sound::playSource(char* name) {
+	auto source = sources_[name].first;
+	alSourcePlay(source);
 }
 
 
 Sound::~Sound() {
-	alDeleteSources(1, &sourceid);
-	alDeleteBuffers(1, &bufferid);
+	for (auto & source : sources_) {
+		alDeleteSources(1, &source.second.first);
+		alDeleteBuffers(1, &source.second.second);
+	}
 
 	alcDestroyContext(this->context);
 	alcCloseDevice(this->device);

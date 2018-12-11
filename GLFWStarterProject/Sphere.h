@@ -1,4 +1,6 @@
 #pragma once
+#ifndef SPHERE_H
+#define SPHERE_H
 
 #include <vector>
 
@@ -27,3 +29,4 @@ private:
 	void parse(std::vector<glm::vec3>& vertices, std::vector<glm::vec3>& normals, std::vector<unsigned int>& indices);
 };
 
+#endif
